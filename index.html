@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>মুদি দোকান পণ্য হিসাব</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="date"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        #total-sales, #total-profit {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>মুদি দোকান পণ্য হিসাব</h1>
+
+        <label for="product-name">পণ্য এর নাম:</label>
+        <input type="text" id="product-name" placeholder="পণ্যের নাম লিখুন">
+        <button onclick="addProduct()">যোগ করুন</button>
+
+        <h2>পণ্যের তালিকা</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>পণ্য এর নাম</th>
+                    <th>ক্রয়মূল্য</th>
+                    <th>বিক্রয়মূল্য</th>
+                    <th>লাভ</th>
+                    <th>অপসারণ</th>
+                </tr>
+            </thead>
+            <tbody id="product-table-body">
+            </tbody>
+        </table>
+
+        <h2>মোট হিসাব</h2>
+        <button onclick="calculateTotal()">মোট লাভ এবং বিক্রয়মূল্য দেখুন</button>
+        <p id="total-sales">মোট বিক্রয়: 0</p>
+        <p id="total-profit">মোট লাভ: 0</p>
+
+        <h2>হিসাব সেভ করুন</h2>
+        <label for="save-date">তারিখ:</label>
+        <input type="date" id="save-date">
+        <button onclick="saveData()">সেভ করুন</button>
+
+        <h2>হিসাব পুনরুদ্ধার করুন</h2>
+        <label for="retrieve-date">তারিখ:</label>
+        <input type="date" id="retrieve-date">
+        <button onclick="retrieveData()">পুনরুদ্ধার করুন</button>
+
+        <h2>নতুন পণ্য যোগ করুন</h2>
+        <label for="new-product-name">পণ্যের নাম:</label>
+        <input type="text" id="new-product-name" placeholder="পণ্যের নাম">
+        <label for="buy-price">ক্রয়মূল্য:</label>
+        <input type="text" id="buy-price" placeholder="ক্রয়মূল্য">
+        <label for="sell-price">বিক্রয়মূল্য:</label>
+        <input type="text" id="sell-price" placeholder="বিক্রয়মূল্য">
+        <button onclick="addNewProduct()">যোগ করুন</button>
+    </div>
+
+    <script>
+        // Initial product prices
+        const defaultProductPrices = {
+            "চাল": { buyPrice: 50, sellPrice: 60 },
+            "ডাল": { buyPrice: 70, sellPrice: 85 },
+            "তেল": { buyPrice: 120, sellPrice: 140 },
+            "চিপস": { buyPrice: 7, sellPrice: 10 },
+            "সাবান": { buyPrice: 40, sellPrice: 45 }
+        };
+
+        function loadProductPrices() {
+            return JSON.parse(localStorage.getItem('productPrices')) || defaultProductPrices;
+        }
+
+        function addProduct() {
+            const productName = document.getElementById('product-name').value;
+            const productTableBody = document.getElementById('product-table-body');
+            const productPrices = loadProductPrices();
+
+            if (productPrices[productName]) {
+                const buyPrice = productPrices[productName].buyPrice;
+                const sellPrice = productPrices[productName].sellPrice;
+                const profit = sellPrice - buyPrice;
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${productName}</td>
+                    <td>${buyPrice}</td>
+                    <td>${sellPrice}</td>
+                    <td>${profit}</td>
+                    <td><button onclick="removeProduct(this)">রিমুভ</button></td>
+                `;
+                productTableBody.appendChild(newRow);
+            } else {
+                alert('এই পণ্যটি তালিকায় নেই।');
+            }
+        }
+
+        function removeProduct(button) {
+            const row = button.parentElement.parentElement;
+            row.parentElement.removeChild(row);
+            calculateTotal(); // Update totals after removing a product
+        }
+
+        function calculateTotal() {
+            const rows = document.getElementById('product-table-body').getElementsByTagName('tr');
+            let totalSales = 0;
+            let totalProfit = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const sellPrice = parseFloat(rows[i].cells[2].innerText);
+                const profit = parseFloat(rows[i].cells[3].innerText);
+
+                totalSales += sellPrice;
+                totalProfit += profit;
+            }
+
+            document.getElementById('total-sales').innerText = 'মোট বিক্রয়: ' + totalSales.toFixed(2);
+            document.getElementById('total-profit').innerText = 'মোট লাভ: ' + totalProfit.toFixed(2);
+        }
+
+        function saveData() {
+            const date = document.getElementById('save-date').value;
+            const rows = document.getElementById('product-table-body').getElementsByTagName('tr');
+            let data = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                const productName = rows[i].cells[0].innerText;
+                const buyPrice = rows[i].cells[1].innerText;
+                const sellPrice = rows[i].cells[2].innerText;
+                const profit = rows[i].cells[3].innerText;
+
+                data.push({ productName, buyPrice, sellPrice, profit });
+            }
+
+            if (date) {
+                let existingData = localStorage.getItem(date);
+                if (existingData) {
+                    existingData = JSON.parse(existingData);
+                    data = existingData.concat(data);
+                }
+
+                localStorage.setItem(date, JSON.stringify(data));
+                alert('তথ্য সেভ হয়েছে।');
+            } else {
+                alert('অনুগ্রহ করে একটি তারিখ নির্বাচন করুন।');
+            }
+        }
+
+        function retrieveData() {
+            const date = document.getElementById('retrieve-date').value;
+            const productTableBody = document.getElementById('product-table-body');
+            productTableBody.innerHTML = ''; // Clear current table contents
+
+            if (date) {
+                const data = localStorage.getItem(date);
+                if (data) {
+                    const products = JSON.parse(data);
+                    products.forEach(product => {
+                        const newRow = document.createElement('tr');
+                        newRow.innerHTML = `
+                            <td>${product.productName}</td>
+                            <td>${product.buyPrice}</td>
+                            <td>${product.sellPrice}</td>
+                            <td>${product.profit}</td>
+                            <td><button onclick="removeProduct(this)">রিমুভ</button></td>
+                        `;
+                        productTableBody.appendChild(newRow);
+                    });
+                } else {
+                    alert('এই তারিখের জন্য কোন হিসাব পাওয়া যায়নি।');
+                }
+            } else {
+                alert('অনুগ্রহ করে একটি তারিখ নির্বাচন করুন।');
+            }
+        }
+
+        function addNewProduct() {
+            const productName = document.getElementById('new-product-name').value;
+            const buyPrice = parseFloat(document.getElementById('buy-price').value);
+            const sellPrice = parseFloat(document.getElementById('sell-price').value);
+
+            if (productName && !isNaN(buyPrice) && !isNaN(sellPrice)) {
+                const newProduct = { productName, buyPrice, sellPrice };
+
+                // Save new product to localStorage
+                const productPrices = loadProductPrices();
+                productPrices[productName] = { buyPrice, sellPrice };
+                localStorage.setItem('productPrices', JSON.stringify(productPrices));
+
+                alert('নতুন পণ্য যোগ করা হয়েছে।');
+            } else {
+                alert('অনুগ্রহ করে সব ফিল্ড পূরণ করুন।');
+            }
+        }
+    </script>
+</body>
+</html>
